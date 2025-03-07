@@ -14,4 +14,8 @@ def slidemin(data, k):
             yield data[minq[0]]
 
 
-print(list(slidemin([9, 3, 3, 5, 6, 2, 4, 5, 6], 3)))
+if __name__ == "__main__":
+    import sys
+
+    k, *data = [int(x) for x in input().split()]
+    print(" ".join(str(x) for x in slidemin(data, k)))
