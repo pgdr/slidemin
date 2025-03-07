@@ -8,6 +8,9 @@
 \usepackage{microtype}
 \usepackage{minted}
 \usepackage{parskip}
+\usepackage{mathtools}
+
+\newcommand{\window}[1]{\underbracket[0.1pt][0.1pt]{#1}}
 
 \begin{document}
 
@@ -21,9 +24,9 @@ However, when we want to compute the minimum value, we need to know which next
 minimum value to keep when a small value disappears out of the window.
 %
 Recomputing this value every iteration is more expensive than necessary; It
-would take $O(n \cdot k)$, where $n$ is the number of elements and $k$ the size
-of the window.  There is, however, a way of computing all min-values in $O(n)$
-time.
+would take $\Omega(n \cdot k)$, where $n$ is the number of elements and $k$ the size
+of the window.  There is, however, a way of computing all min-values in $O(n)$ \emph{amortized}
+time (left as an exercise to the student).
 
 The trick is to use a \emph{double-ended queue}.  In this queue, we keep a
 (necessarily increasing) list of potential minimum values.  To understand the
@@ -44,7 +47,7 @@ Again, we have that $5$ is not relevant, so we remove it from the queue.  After
 having read $10, 5, 3$, we have \mintinline{python}{Q = [3]}.
 
 Since we have seen $k=3$ values, we can output $3$.  The window is now
-at $$[\langle 10, 5, 3 \rangle 5, 7, 4, 2].$$ At this point, we are ready to
+at $$[\window{ 10, 5, 3}, 5, 7, 4, 2].$$ At this point, we are ready to
 move the window one step to the right, i.e., we want to discard 10 and
 introduce 5.  Since the left-most value in \mintinline{python}{data} is 10, and
 10 is not in the queue, we do not pop anything from the queue.  However, the
@@ -52,7 +55,7 @@ value we include in the window might at some point in the future become the
 minimum value (after 3 has been discarded some time in the future), so we
 include 5 in the queue.
 
-At $[10, \langle 5, 3, 5 \rangle 7, 4, 2]$ with
+At $[10, \window{ 5, 3, 5 }, 7, 4, 2]$ with
 %
 \mintinline{python}{Q = [3, 5]},
 %
@@ -63,7 +66,7 @@ the leftmost value in the queue is 3, which means that the value we discard is
 irrelevant.  On the right hand side, we include 7.  This might in the future
 become the minimum value, so we need to include it in the queue.
 
-The state is now $[10, 5 \langle 3, 5, 7 \rangle 4, 2]$ with
+The state is now $[10, 5, \window{ 3, 5, 7}, 4, 2]$ with
 %
 \mintinline{python}{Q = [3, 5, 7]}, and we again output a value: the leftmost
 value in the queue, 3.  Thus far, our output has been
@@ -80,24 +83,24 @@ then
 but we also need to include the new value, which happens to be 4.
 
 When the queue is \mintinline{python}{Q = [5, 7]}, and the new value is 4, we
-can notice that neither 5 nor 7 will ever be output, because (a) 4 is lower
+can notice that neither 5 nor 7 will ever be the minimum value, because (a) 4 is smaller
 than them both and (b) 4 will outlive them.  The procedure is to look at the
 rightmost value, and since $7 > 4$, we pop off 7, and repeat.  The rightmost
 value is $5 > 4$ and we will pop off 5, and we are left with an empty queue,
 and therefore the state is:
 
-$$[10, 5 ,3 \langle 5, 7, 4 \rangle  2],$$
+$$[10, 5 ,3, \window{ 5, 7, 4 },  2],$$
 with
 %
 \mintinline{python}{Q = [4]}
 %
 and we output the leftmost value in the queue: 4.
 
-The final state is $[10, 5 ,3 ,5 \langle 7, 4 , 2 \rangle]$, with
+The final state is $[10, 5 ,3 ,5, \window{ 7, 4 , 2 }]$, with
 %
 \mintinline{python}{Q = [2]}
 %
-at which point we output 2.  The total output is
+at which point we output~2.  The total output is
 %
 \mintinline{python}{output = [3, 3, 3, 4, 2]}.
 %
@@ -109,7 +112,7 @@ at which point we output 2.  The total output is
 def slidemin(data, k):
     """Linear time algorithm for computing sliding
        window minimum values."""
-    minq = deque()
+    minq = deque()              # from collections
     for i in range(len(data)):
         if minq and minq[0] == i - k:
             minq.popleft()
